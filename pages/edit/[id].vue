@@ -45,10 +45,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useNuxtApp, useRoute, navigateTo } from "#app";
 
 const { $api } = useNuxtApp();
+const nuxtApp = useNuxtApp();
 const route = useRoute();
 const authors = ref([]);
 const form = ref({
@@ -57,27 +58,36 @@ const form = ref({
   content: "",
   status: "",
 });
-const fetchPost = async (id) => {
-  const data = await $api(`/blogs/${id}`, {
-    method: "GET",
-  });
-  form.value = {
-    ...data,
-    author_id: authors.value.find((author) => author.name === data.author)?.id,
-    status: data.status.charAt(0).toUpperCase() + data.status.slice(1),
-  };
-};
-const fetchAuthors = async () => {
-  const { data } = await $api("/authors", {
-    method: "GET",
-  });
-  authors.value = data;
-};
 
-onMounted(() => {
-  fetchAuthors();
-  fetchPost(route.params.id);
-});
+const { data, error } = await useAsyncData(
+  `blogs/${route.params.id}`,
+  async () => {
+    const [authors, post] = await Promise.all([
+      $api("/authors", { method: "GET" }),
+      $api(`/blogs/${route.params.id}`, { method: "GET" }),
+    ]);
+    return { authors: authors.data, post };
+  },
+  {
+    getCachedData: (key) => {
+      const cached = nuxtApp.payload.data[key] || nuxtApp.static.data[key];
+      if (!cached?.authors || !cached?.post) return;
+      return cached;
+    },
+  },
+);
+authors.value = data.value.authors;
+form.value = {
+  content: data.value.post.content,
+  title: data.value.post.title,
+  author_id: authors.value.find(
+    (author) => author.name === data.value.post.author,
+  )?.id,
+  status:
+    data.value.post.status.charAt(0).toUpperCase() +
+    data.value.post.status.slice(1),
+};
+if (error.value) useToastify(error.value, { type: "error" });
 
 const submitForm = async () => {
   await $api(`/blogs/${route.params.id}`, {
@@ -89,7 +99,10 @@ const submitForm = async () => {
       status: form.value.status.toLowerCase(),
     },
   });
-
+  delete nuxtApp.payload.data["posts"];
+  delete nuxtApp.static.data["posts"];
+  delete nuxtApp.payload.data[`blogs/${route.params.id}`];
+  delete nuxtApp.static.data[`blogs/${route.params.id}`];
   navigateTo("/");
 };
 </script>

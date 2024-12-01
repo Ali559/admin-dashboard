@@ -30,7 +30,7 @@
         <tr v-for="post in filteredPosts" :key="post.id">
           <td>{{ post.title }}</td>
           <td>{{ post.status }}</td>
-          <td v-if="showActions">
+          <td>
             <button @click="editPost(post.id)">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -71,10 +71,9 @@
 import { ref, computed } from "vue";
 import { useNuxtApp } from "#app";
 import Loader from "~/components/Loader/Loader.vue";
+const nuxtApp = useNuxtApp();
 const { $api } = useNuxtApp();
-const posts = ref([]);
 const filterStatus = ref("");
-const showActions = ref(false);
 const loading = ref(true);
 const searchText = ref("");
 
@@ -82,11 +81,15 @@ const { refresh, data, error } = await useAsyncData(
   "posts",
   () => $api("/blogs"),
   {
-    watch: [posts],
+    getCachedData: (key) => {
+      const cached = nuxtApp.payload.data[key] || nuxtApp.static.data[key];
+      if (!cached?.data) return;
+      return cached.data;
+    },
   },
 );
 if (error.value) useToastify(error.value, { type: "error" });
-
+loading.value = false;
 const filteredPosts = computed(() =>
   data.value.data.filter((post) => {
     return (

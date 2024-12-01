@@ -47,7 +47,7 @@
 import { ref, onMounted } from "vue";
 import { useNuxtApp, navigateTo } from "#app";
 const { $api } = useNuxtApp();
-
+const nuxtApp = useNuxtApp();
 const authors = ref([]);
 const form = ref({
   author_id: 1,
@@ -56,15 +56,15 @@ const form = ref({
   status: "Unpublished",
 });
 
-const fetchAuthors = async () => {
-  const { data, error } = await useAsyncData("authors", () => $api("/authors"));
-  if (error.value) return useToastify(error.value, { type: "error" });
-  authors.value = data.value.data;
-};
-
-onMounted(() => {
-  fetchAuthors();
+const { data, error } = await useAsyncData("authors", () => $api("/authors"), {
+  getCachedData: (key) => {
+    const cached = nuxtApp.payload.data[key] || nuxtApp.static.data[key];
+    if (!cached?.data) return;
+    return cached.data;
+  },
 });
+if (error.value) useToastify(error.value, { type: "error" });
+authors.value = data.value.data;
 
 const submitForm = async () => {
   await $api("/blogs", {
@@ -74,6 +74,8 @@ const submitForm = async () => {
     },
     method: "POST",
   });
+  delete nuxtApp.payload.data["posts"];
+  delete nuxtApp.static.data["posts"];
   navigateTo("/");
 };
 </script>

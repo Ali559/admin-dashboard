@@ -3,17 +3,17 @@
     <div class="logo">Welcome back.</div>
 
     <div class="nav-links">
-      <a
-        href="/"
+      <NuxtLink
+        to="/"
         class="nav-link"
         v-bind:class="{ active: $route.path === '/' }"
-        >Dashboard</a
+        >Dashboard</NuxtLink
       >
-      <a
-        href="/add"
+      <NuxtLink
+        to="/add"
         class="nav-link"
         v-bind:class="{ active: $route.path === '/add' }"
-        >Add Post</a
+        >Add Post</NuxtLink
       >
     </div>
     <div class="theme-toggle" @click="toggleTheme">
