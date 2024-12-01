@@ -1,9 +1,9 @@
 export default defineNuxtPlugin((nuxtApp) => {
-
+    const config = useRuntimeConfig();
     const api = $fetch.create({
-        baseURL: 'http://blog-panel.suly-soft.com.www67.your-server.de/api',
+        baseURL: config.public.apiUrl as string,
         headers: {
-            'x-key': '2eee3f69-cd09-399f-a5b9-978d2c78c7f3'
+            'x-key': config.public.apiKey as string
         },
         async onResponseError({ response }) {
             if (response.status > 201) {

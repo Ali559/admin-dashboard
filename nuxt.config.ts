@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   ssr: false,
-  modules: ['@nuxtjs/color-mode', 'nuxt-toastify'],
+  modules: ['@nuxtjs/color-mode', 'nuxt-toastify',],
   toastify: {
     theme: 'auto',
     position: 'top-right',
@@ -15,4 +15,10 @@ export default defineNuxtConfig({
       pathPrefix: false,
     },
   ],
+  runtimeConfig: {
+    public: {
+      apiUrl: process.env.API_URL,
+      apiKey: process.env.API_KEY
+    }
+  }
 })
